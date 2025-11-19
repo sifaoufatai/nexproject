@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuessMyAge</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-center mb-8">GuessMyAge</h1>
+        
+        <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+            <div id="drop-area" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-6">
+                <p class="mb-4">Glissez-déposez une image ici ou cliquez pour sélectionner</p>
+                <input type="file" id="fileInput" accept="image/*" class="hidden">
+                <button id="selectFileBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Sélectionner une image
+                </button>
+            </div>
+            
+            <div id="result" class="hidden">
+                <h2 class="text-2xl font-semibold mb-4">Résultat</h2>
+                <div class="flex items-center justify-center mb-4">
+                    <img id="preview" src="" alt="Preview" class="max-w-full h-auto rounded-lg">
+                </div>
+                <p class="text-lg">Âge estimé : <span id="age" class="font-bold"></span> ans</p>
+                <p class="text-gray-600">Confiance : <span id="confidence"></span>%</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('fileInput');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+        const resultDiv = document.getElementById('result');
+        const previewImg = document.getElementById('preview');
+        const ageSpan = document.getElementById('age');
+        const confidenceSpan = document.getElementById('confidence');
+
+        // Gestion du glisser-déposer
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropArea.classList.add('border-blue-500', 'bg-blue-50');
+        }
+
+        function unhighlight() {
+            dropArea.classList.remove('border-blue-500', 'bg-blue-50');
+        }
+
+        // Gestion du dépôt de fichier
+        dropArea.addEventListener('drop', handleDrop, false);
+        selectFileBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.match('image.*')) {
+                    uploadFile(file);
+                } else {
+                    alert('Veuillez sélectionner une image valide.');
+                }
+            }
+        }
+
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    showResult(file, data);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue lors du traitement de l\'image.');
+            });
+        }
+
+        function showResult(file, data) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                ageSpan.textContent = data.age;
+                confidenceSpan.textContent = Math.round(data.confidence * 100);
+                resultDiv.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>

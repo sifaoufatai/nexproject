@@ -1,0 +1,35 @@
+/* Styles personnalisés */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+#drop-area {
+    transition: all 0.3s ease;
+}
+
+#drop-area.highlight {
+    border-color: #3b82f6;
+    background-color: #f0f9ff;
+}
+
+#preview {
+    max-height: 400px;
+    object-fit: contain;
+}/* Styles personnalisés */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+#drop-area {
+    transition: all 0.3s ease;
+}
+
+#drop-area.highlight {
+    border-color: #3b82f6;
+    background-color: #f0f9ff;
+}
+
+#preview {
+    max-height: 400px;
+    object-fit: contain;
+}
